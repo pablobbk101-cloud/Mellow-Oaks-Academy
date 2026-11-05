@@ -111,7 +111,7 @@
   var vh = innerHeight;
   var below = function (el) { return el.getBoundingClientRect().top > vh * 0.92; };
   var targets = [];
-  document.querySelectorAll('.path, .cards, .news, .features, .steps, .trio, .gallery, .fee-grid, .roles, .foot-grid').forEach(function (g) {
+  document.querySelectorAll('.path, .cards, .ptiles, .news, .features, .steps, .trio, .gallery, .fee-grid, .roles, .foot-grid').forEach(function (g) {
     if (!below(g)) return;
     g.setAttribute('data-rv', '');
     Array.prototype.forEach.call(g.children, function (c, i) { c.classList.add('rv'); c.style.setProperty('--d', Math.min(i, 7)); });

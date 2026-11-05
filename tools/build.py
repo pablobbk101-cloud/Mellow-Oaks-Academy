@@ -70,6 +70,9 @@ ICON = {
     "chat": '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1.3-3.9A8 8 0 1112 20a8 8 0 01-3.9-1L4 20z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>',
     "pen": '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4zM14 6l4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>',
     "chev": '<svg width="12" height="8" viewBox="0 0 12 8" aria-hidden="true"><path d="M1 1.5l5 5 5-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    "fee": '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3zM9 8h6M9 12h6M9 16h3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>',
+    "cal": '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v14H4zM4 10h16M8 3v5M16 3v5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>',
+    "news": '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h13v14H6a2 2 0 01-2-2V5zM17 9h3v8a2 2 0 01-2 2M7 9h7M7 13h7M7 16h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>',
     "leaf": '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19c0-8 5-13 15-14-1 10-6 15-14 15M5 19c3-4 6-7 10-9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
 }
 
@@ -142,7 +145,7 @@ FONTS = ('<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="
 FAV = UP + "2025/09/MellowOaksAcademy_logosm-3.png"
 
 
-def page(fn, title, desc, body, scripts=("site.js",)):
+def page(fn, title, desc, body, scripts=("site.js",), nav=None):
     doc = """<!doctype html>
 <html lang="en-ZA">
 <head>
@@ -163,7 +166,7 @@ def page(fn, title, desc, body, scripts=("site.js",)):
 %s
 </body>
 </html>
-""" % (esc(title), esc(desc), FAV, FONTS, VER["styles.css"], header(fn), body, footer(),
+""" % (esc(title), esc(desc), FAV, FONTS, VER["styles.css"], header(nav or fn), body, footer(),
        "\n".join('<script src="%s?v=%s" defer></script>' % (s, VER[s]) for s in scripts))
     doc = re.sub(r'href="index\.html', 'href="./', doc)
     doc = re.sub(r'href="([a-z0-9-]+)\.html', r'href="\1', doc)
@@ -212,7 +215,7 @@ def phase_path(current=None):
 # ------------------------------------------------------------------ pages
 def build_home():
     body = """
-<section class="hero">
+<section class="hero hero-home">
   <div class="hero-media">%s<div class="hero-shade"></div></div>
   <div class="wrap hero-inner">
     <p class="pill"><span class="dot" aria-hidden="true"></span>2027 registrations now open</p>
@@ -226,48 +229,169 @@ def build_home():
     </ul>
   </div>
 </section>
-<section class="section">
+%s
+<section class="section news-top">
+  <div class="wrap">
+    <div class="head row"><h2>Latest news</h2><a class="text-link" href="news.html">All news</a></div>
+    %s
+  </div>
+</section>
+<section class="section tint">
   <div class="wrap">
     <div class="head"><p class="kicker">From first steps to matric</p><h2>One school for every stage</h2><p>Tap a phase to see what learners do there.</p></div>
     %s
   </div>
 </section>
-<section class="section tint">
+<section class="section">
   <div class="wrap">
     <div class="head"><h2>Life at Mellow Oaks</h2></div>
-    <div class="cards">
-      <a class="card" href="academics.html">%s<div><h3>Academics</h3><p>The rigour of CAPS with creative, inquiry-based learning, small classes and a strong focus on literacy and numeracy.</p><span class="more">Explore academics</span></div></a>
-      <a class="card" href="sports-and-clubs.html">%s<div><h3>Sports and clubs</h3><p>Soccer, netball, athletics and dance, plus chess, drama and ballet.</p><span class="more">See sports and clubs</span></div></a>
-      <a class="card" href="school-life.html">%s<div><h3>Campus life</h3><p>Outdoor classrooms, lush gardens and tranquil courtyards under leafy canopies.</p><span class="more">Discover campus life</span></div></a>
+    <div class="ptiles">
+      <a class="ptile" href="academics.html">%s<span class="pt-cap"><b>Academics</b><small>CAPS with creative, inquiry-based learning</small></span></a>
+      <a class="ptile" href="sports-and-clubs.html">%s<span class="pt-cap"><b>Sports and clubs</b><small>Soccer, netball, athletics, dance, chess and drama</small></span></a>
+      <a class="ptile" href="school-life.html">%s<span class="pt-cap"><b>Campus life</b><small>Outdoor classrooms, gardens and leafy courtyards</small></span></a>
     </div>
   </div>
 </section>
-<section class="section">
+<section class="section tint">
   <div class="wrap video-grid">
     <div><p class="kicker">School tour</p><h2>Discover the spirit of Mellow Oaks</h2><p>From joyful classrooms and vibrant sports fields to the lush natural surroundings that inspire every learner. Watch the school tour video.</p><a class="btn btn-line" href="contact.html#tour">Book a tour in person</a></div>
     <div class="video"><button class="video-btn" type="button" data-video="%s" aria-label="Play the school tour video">%s<span class="play" aria-hidden="true"></span></button></div>
   </div>
 </section>
-<section class="section tint">
-  <div class="wrap">
-    <div class="head row"><h2>School news</h2><a class="text-link" href="news.html">All news</a></div>
-    %s
-  </div>
-</section>%s""" % (img("grounds", lazy=False, eager_pri=True), phase_path(), img("class"), img("sport"), img("outdoor"),
-                   VIDEO, img("green"), news_list(3), cta_band())
+%s""" % (img("grounds", lazy=False, eager_pri=True), quick_bar(), news_list(3), phase_path(), img("class"), img("sport"), img("outdoor"),
+                   VIDEO, img("green"), cta_band())
     page("index.html", "A CAPS school in Roodepoort, 18 months to Grade 12",
          "Concept website for Mellow Oaks Academy in Roodepoort: pre-primary, primary and high school with small classes, CAPS curriculum and Christian values.", body)
 
 
-NEWS = [("Newsletter, 23 October 2026", "Newsletter"), ("A Moment to Remember: School Concert Celebrates Talent and Creativity", "Events"),
-        ("Celebrating Excellence: Matric Farewell", "Events"), ("Newsletter, 18 September 2026", "Newsletter"),
-        ("Newsletter, 21 August 2026", "Newsletter"), ("Investigating Life Science: Grade 11 Kidney Dissection", "Academics"),
-        ("School Fee Increase for 2027", "Admissions"), ("Welcoming Our New Principal: Mr Quinten Poley", "School news")]
+# ------------------------------------------------------------------ news: the school's real blog posts (tools/posts.json, from its WordPress API)
+from html.parser import HTMLParser
+import html as _html, json as _json
+
+MONTHS = "January February March April May June July August September October November December".split()
 
 
-def news_list(n=None):
-    items = NEWS[:n] if n else NEWS
-    return '<ul class="news">%s</ul>' % "".join('<li><a href="%smellow-oaks-blog/" rel="noopener"><span class="tag">%s</span><span class="n-title">%s</span><span class="n-go">Read on the school blog</span></a></li>' % (OLD, esc(t2), esc(t)) for t, t2 in items)
+def nice_date(iso):
+    y, m, d = iso[:10].split("-")
+    return "%d %s %s" % (int(d), MONTHS[int(m) - 1], y)
+
+
+class Clean(HTMLParser):
+    KEEP = {"p", "h2", "h3", "h4", "ul", "ol", "li", "strong", "b", "em", "i", "a", "br", "figure", "figcaption", "blockquote"}
+
+    def __init__(self, slugs):
+        super().__init__(convert_charrefs=True); self.out = []; self.slugs = slugs; self.imgs = 0
+
+    def handle_starttag(self, tag, attrs):
+        a = dict(attrs)
+        if tag == "img" and a.get("src"):
+            self.imgs += 1
+            w, h = a.get("width", ""), a.get("height", "")
+            self.out.append('<img src="%s" alt="%s"%s loading="lazy" decoding="async">' % (
+                esc(a["src"]), esc(a.get("alt") or ""), (' width="%s" height="%s"' % (w, h)) if w.isdigit() and h.isdigit() else ""))
+        elif tag == "a":
+            href = a.get("href", "")
+            m = re.match(r"https?://(www\.)?mellowoaksacademy\.co\.za/([a-z0-9-]+)/?$", href)
+            if m and m.group(2) in self.slugs:
+                self.out.append('<a href="news-%s.html">' % m.group(2))
+            elif href:
+                self.out.append('<a href="%s" rel="noopener">' % esc(href))
+            else:
+                self.out.append("<a>")
+        elif tag in self.KEEP:
+            self.out.append("<%s>" % ("br" if tag == "br" else tag))
+
+    def handle_startendtag(self, tag, attrs):
+        self.handle_starttag(tag, attrs)
+
+    def handle_endtag(self, tag):
+        if tag in self.KEEP and tag != "br":
+            self.out.append("</%s>" % tag)
+
+    def handle_data(self, data):
+        self.out.append(esc(data))
+
+
+def clean_html(raw, slugs):
+    c = Clean(slugs); c.feed(raw)
+    h = "".join(c.out)
+    for _ in range(3):
+        h = re.sub(r"<(p|h2|h3|h4|li|strong|em|b|i|figcaption)>\s*</\1>", "", h)
+    h = re.sub(r"<figure>\s*</figure>", "", h)
+    return h.strip(), c.imgs
+
+
+def text_of(raw):
+    return _html.unescape(re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", raw))).strip()
+
+
+def load_posts():
+    raw = _json.load(open(os.path.join(ROOT, "tools", "posts.json"), encoding="utf-8"))
+    slugs = {p["slug"] for p in raw}
+    posts = []
+    for p in raw:
+        title = text_of(p["title"]["rendered"]).replace("Mellow Oaks Academy School Concert", "School Concert")
+        body, nimg = clean_html(p["content"]["rendered"], slugs)
+        media = (p.get("_embedded", {}).get("wp:featuredmedia") or [{}])[0]
+        sizes = media.get("media_details", {}).get("sizes", {})
+        pick = lambda *ks: next((sizes[k]["source_url"] for k in ks if k in sizes), media.get("source_url", ""))
+        exc = text_of(p["excerpt"]["rendered"]).replace(" [&hellip;]", "").replace(" […]", "")
+        if len(exc) > 150:
+            exc = exc[:147].rsplit(" ", 1)[0] + "…"
+        kind = "Newsletter" if p["slug"].startswith("newsletter") else (
+            "Sport" if re.search(r"netball|vs-|sport", p["slug"]) else (
+            "Academics" if re.search(r"science|dissection|grade", p["slug"]) else "School news"))
+        posts.append(dict(slug=p["slug"], title=title, date=p["date"][:10], kind=kind, body=body, words=len(text_of(p["content"]["rendered"]).split()),
+                          thumb=pick("medium_large", "large", "medium"), big=pick("large", "full", "medium_large"),
+                          alt=media.get("alt_text") or title, excerpt=exc))
+    posts.sort(key=lambda x: x["date"], reverse=True)
+    return posts
+
+
+POSTS = load_posts()
+
+
+def news_list(n=None, rich=False, skip=None):
+    items = [p for p in POSTS if p["slug"] != skip][:n] if n else POSTS
+    return '<ul class="news rich">%s</ul>' % "".join(
+        '<li><a href="news-%s.html"><span class="n-img"><img src="%s" alt="%s" loading="lazy" decoding="async"></span><span class="n-body"><span class="n-meta"><span class="tag">%s</span><time datetime="%s">%s</time></span><span class="n-title">%s</span><span class="n-sum">%s</span><span class="n-go">Read more</span></span></a></li>'
+        % (p["slug"], esc(p["thumb"]), esc(p["alt"]), esc(p["kind"]), p["date"], nice_date(p["date"]), esc(p["title"]), esc(p["excerpt"])) for p in items)
+
+
+def build_posts():
+    for p in POSTS:
+        note = ""
+        body = """
+<article class="post">
+  <header class="post-head wrap narrow">
+    <p class="crumbs"><a href="index.html">Home</a> / <a href="news.html">News</a></p>
+    <p class="n-meta"><span class="tag">%s</span><time datetime="%s">%s</time></p>
+    <h1>%s</h1>
+  </header>
+  <div class="wrap post-wrap">
+    <figure class="post-cover"><img src="%s" alt="%s" fetchpriority="high"></figure>
+    <div class="post-body narrow">%s%s</div>
+  </div>
+</article>
+<section class="section tint">
+  <div class="wrap">
+    <div class="head row"><h2>More news</h2><a class="text-link" href="news.html">All news</a></div>
+    %s
+  </div>
+</section>%s""" % (esc(p["kind"]), p["date"], nice_date(p["date"]), esc(p["title"]), esc(p["big"]), esc(p["alt"]),
+                   note, p["body"], news_list(3, skip=p["slug"]), cta_band())
+        page("news-%s.html" % p["slug"], p["title"], (p["excerpt"] or p["title"])[:155], body, nav="news.html")
+
+
+QUICK = [("fees.html", "fee", "School fees", "2026 and 2027 fees"),
+         ("apply.html", "pen", "Apply online", "Five quick steps"),
+         ("contact.html#tour", "cal", "Book a tour", "Fridays are Open Day"),
+         ("news.html", "news", "School news", "Newsletters and events")]
+
+
+def quick_bar():
+    return '<nav class="quick" aria-label="Quick links"><div class="wrap"><ul>%s</ul></div></nav>' % "".join(
+        '<li><a href="%s"><span class="q-ico">%s</span><span class="q-txt"><b>%s</b><small>%s</small></span></a></li>' % (h, ICON[i], esc(a), esc(b)) for h, i, a, b in QUICK)
 
 
 def build_about():
@@ -288,7 +412,7 @@ def build_principal():
         split("classroom", "Working with every family", prose(
             "Our principal collaborates closely with teachers and parents to design personalised interventions and provide targeted resources, so that each learner receives the support they need to thrive.",
             "To meet the principal or ask about your child's needs, book a visit through the school office.")
-              + '<div class="btn-row"><a class="btn btn-leaf" href="contact.html#tour">Book a visit</a><a class="btn btn-line" href="%smellow-oaks-blog/" rel="noopener">Read the welcome post</a></div>' % OLD) + cta_band()
+              + '<div class="btn-row"><a class="btn btn-leaf" href="contact.html#tour">Book a visit</a><a class="btn btn-line" href="news-welcoming-our-new-principal-mr-quinten-poley.html">Read the welcome post</a></div>') + cta_band()
     page("principal.html", "Our principal", "Meet Mr Quinten Poley, principal of Mellow Oaks Academy.", body)
 
 
@@ -375,7 +499,7 @@ def build_sports():
 
 def build_news():
     body = hero_inner("School life", "News", "Newsletters, events and updates from Mellow Oaks Academy.", "green", [("Home", "index.html"), ("School life", "school-life.html")], cta=False) + \
-        '<section class="section"><div class="wrap">%s<p class="form-note">In this preview, posts open on the school\'s current blog. On the new site they would live here.</p></div></section>' % news_list()
+        '<section class="section"><div class="wrap">%s</div></section>' % news_list()
     page("news.html", "News", "News and newsletters from Mellow Oaks Academy.", body)
 
 
@@ -521,6 +645,6 @@ def build_apply():
 
 if __name__ == "__main__":
     for f in (build_home, build_about, build_principal, build_careers, build_academics, build_phases, build_support,
-              build_school_life, build_sports, build_news, build_admissions, build_fees, build_contact, build_apply):
+              build_school_life, build_sports, build_news, build_posts, build_admissions, build_fees, build_contact, build_apply):
         f()
     print("built", sorted(x for x in os.listdir(ROOT) if x.endswith(".html")))
