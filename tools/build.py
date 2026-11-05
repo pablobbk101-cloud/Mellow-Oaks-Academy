@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Builds the Mellow Oaks Academy concept site.  Run: python3 tools/build.py
 All school text, photos, logo and documents come from mellowoaksacademy.co.za (read 5 November 2026)."""
-import hashlib, html, os, re
+import hashlib, html, json, os, re
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-ASSETS = ("styles.css", "site.js", "apply.js")
+ASSETS = ("styles.css", "site.js", "apply.js", "ask.js")
 VER = {a: hashlib.sha1(open(os.path.join(ROOT, a), "rb").read()).hexdigest()[:8] for a in ASSETS}
 esc = lambda s: html.escape(str(s), quote=True)
 
@@ -94,11 +94,14 @@ def header(active):
 <header class="site-header">
   <div class="wrap bar">
     <a class="brand" href="index.html" aria-label="Mellow Oaks Academy, home">%s<span class="brand-text"><b>Mellow Oaks</b><small>Academy</small></span></a>
-    <button class="menu-btn" type="button" aria-expanded="false" aria-controls="nav"><span class="menu-lines" aria-hidden="true"></span><span class="menu-label">Menu</span></button>
     <nav id="nav" aria-label="Main">
       <ul class="nav-list">%s<li><a class="nav-link" href="contact.html"%s>Contact</a></li></ul>
       <a class="btn btn-sun nav-cta" href="apply.html">Apply for 2027</a>
     </nav>
+    <div class="bar-actions">
+      <button class="ask-btn" type="button" aria-haspopup="dialog" aria-controls="ask"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 16l4.5 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span class="ask-label">Search or ask</span></button>
+      <button class="menu-btn" type="button" aria-expanded="false" aria-controls="nav"><span class="menu-lines" aria-hidden="true"></span><span class="menu-label">Menu</span></button>
+    </div>
   </div>
 </header>""" % (img("logo", "brand-logo", lazy=False), "".join(items), contact_cur)
 
@@ -145,7 +148,7 @@ FONTS = ('<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="
 FAV = UP + "2025/09/MellowOaksAcademy_logosm-3.png"
 
 
-def page(fn, title, desc, body, scripts=("site.js",), nav=None):
+def page(fn, title, desc, body, scripts=("site.js", "ask.js"), nav=None):
     doc = """<!doctype html>
 <html lang="en-ZA">
 <head>
@@ -640,11 +643,54 @@ def build_apply():
     </aside>
   </div>
 </section>""" % (opt(grades), parent(1, True), parent(2, False), opt(provinces), doc_html, PHONE_TEL, PHONE, WA_URL, WA)
-    page("apply.html", "Apply online", "Apply online to Mellow Oaks Academy for 2027.", body, scripts=("site.js", "apply.js"))
+    page("apply.html", "Apply online", "Apply online to Mellow Oaks Academy for 2027.", body, scripts=("site.js", "ask.js", "apply.js"))
+
+
+
+# ------------------------------------------------------------------ site index: instant search (site-index.json) and the assistant's knowledge (src/site-index.json)
+def strip_tags(h):
+    h = re.sub(r"(?is)<(script|style|svg|select)[^>]*>.*?</\1>", " ", h)
+    h = re.sub(r"(?i)<br\s*/?>|</(p|li|h[1-6]|dt|dd|tr)>", "\n", h)
+    return html.unescape(re.sub(r"[ \t\r\f\v]+", " ", re.sub(r"<[^>]+>", " ", h))).strip()
+
+
+def build_index():
+    pages, chunks = [], []
+    for fn in sorted(x for x in os.listdir(ROOT) if x.endswith(".html")):
+        doc = open(os.path.join(ROOT, fn), encoding="utf-8").read()
+        url = "/" if fn == "index.html" else "/" + fn[:-5]
+        title = "Home" if fn == "index.html" else re.search(r"<title>(.*?) \|", doc).group(1)
+        desc = html.unescape(re.search(r'<meta name="description" content="([^"]*)"', doc).group(1))
+        main = re.search(r'(?s)<main id="main">(.*)</main>', doc).group(1)
+        main = re.sub(r'(?s)<section class="cta">.*?</section>', " ", main)
+        main = re.sub(r'(?s)<section class="section tint">\s*<div class="wrap">\s*<div class="head row"><h2>More news</h2>.*?</section>', " ", main)
+        if fn != "news.html":
+            main = re.sub(r'(?s)<ul class="news rich">.*?</ul>', " ", main)
+        heads = [strip_tags(h) for h in re.findall(r"(?s)<h2[^>]*>(.*?)</h2>", main)]
+        pages.append({"t": html.unescape(title), "u": url, "d": desc, "h": heads[:8], "news": fn.startswith("news-")})
+        parts = re.split(r"(?=<h2)", main)
+        for part in parts:
+            txt = re.sub(r"\n\s*\n+", "\n", strip_tags(part)).strip()
+            if len(txt) < 40:
+                continue
+            hd = re.search(r"(?s)<h2[^>]*>(.*?)</h2>", part)
+            for i in range(0, len(txt), 1100):
+                chunks.append({"u": url, "t": html.unescape(title), "h": strip_tags(hd.group(1)) if hd else "", "x": txt[i:i + 1100]})
+    # facts that live in the footer and header on every page
+    chunks.append({"u": "/contact", "t": "Contact", "h": "Contact details and office hours",
+                   "x": "Address: %s. Phone: %s. WhatsApp: %s. Email: %s and %s. Office hours: %s. Every Friday is Open Day." % (ADDRESS, PHONE, WA, EMAIL_INFO, EMAIL_RECEPTION, HOURS)})
+    chunks.append({"u": "/fees", "t": "School fees", "h": "Fee documents",
+                   "x": "The 2026 school fees are in this PDF: %s . The 2027 school fees are in this PDF: %s . The amounts are inside the PDFs." % (FEES_2026, FEES_2027)})
+    os.makedirs(os.path.join(ROOT, "src"), exist_ok=True)
+    json.dump(pages, open(os.path.join(ROOT, "site-index.json"), "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
+    json.dump({"pages": [{"t": p["t"], "u": p["u"], "news": p["news"]} for p in pages], "chunks": chunks},
+              open(os.path.join(ROOT, "src", "site-index.json"), "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
+    print("index:", len(pages), "pages,", len(chunks), "chunks")
 
 
 if __name__ == "__main__":
     for f in (build_home, build_about, build_principal, build_careers, build_academics, build_phases, build_support,
               build_school_life, build_sports, build_news, build_posts, build_admissions, build_fees, build_contact, build_apply):
         f()
+    build_index()
     print("built", sorted(x for x in os.listdir(ROOT) if x.endswith(".html")))
