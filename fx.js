@@ -125,47 +125,24 @@
         scrollTrigger: { trigger: el, start: 'top 92%', once: true } });
     });
 
-    /* ---------- the signature: the trunk section. One driver (scroll progress) feeds rings, photo, text, count, dots. ---------- */
-    var mm = gsap.matchMedia();
-    mm.add('(min-width: 1001px)', function () {
-      var R = $('.rings'); if (!R) return;
-      var items = $$('.rings-list li', R), rs = $$('.rs-ring', R), imgs = $$('.rs-img', R), dots = $$('.rings-dots button', R);
-      var count = $('.rings-count b', R), nav = $('.rings-nav', R), n = items.length, cur = -1, span = function () { return innerHeight * .75 * n; };
-      R.classList.add('live'); nav.hidden = false;
-      gsap.set(rs, { strokeDasharray: 1, strokeDashoffset: 1 });
-      function show(i) {
-        if (i === cur) return; cur = i;
-        items.forEach(function (li, k) { li.classList.toggle('on', k === i); if (k === i) li.removeAttribute('inert'); else li.setAttribute('inert', ''); });
-        dots.forEach(function (d, k) { d.classList.toggle('on', k === i); d.setAttribute('aria-pressed', k === i ? 'true' : 'false'); });
-        imgs.forEach(function (im, k) { gsap.to(im, { opacity: k === i ? 1 : 0, duration: .8, overwrite: 'auto' }); });
-        if (count) count.textContent = i + 1;
-      }
-      show(0);
-      var st = ScrollTrigger.create({
-        trigger: R, start: 'top top', end: function () { return '+=' + span(); }, pin: true, anticipatePin: 1, invalidateOnRefresh: true,
-        onUpdate: function (self) {
-          var p = self.progress;
-          rs.forEach(function (r, k) { r.style.strokeDashoffset = (1 - clamp(p * n - k, 0, 1)).toFixed(4); });
-          show(Math.min(n - 1, Math.floor(p * n)));
-        }
-      });
-      var onDot = [];
-      dots.forEach(function (d, k) {
-        var f = function () {
-          var y = st.start + (k + .5) / n * (st.end - st.start);
-          lenis ? lenis.scrollTo(y, { duration: 1.4 }) : scrollTo({ top: y, behavior: 'smooth' });
-        };
-        d.addEventListener('click', f); onDot.push([d, f]);
-      });
-      var breathe = gsap.to($('.rings-stage svg', R), { scale: 1.012, duration: 7, yoyo: true, repeat: -1, ease: 'sine.inOut', transformOrigin: '50% 50%' });
-      return function () {
-        R.classList.remove('live'); nav.hidden = true; breathe.kill();
-        items.forEach(function (li) { li.classList.remove('on'); li.removeAttribute('inert'); });
-        gsap.set(rs, { clearProps: 'strokeDasharray,strokeDashoffset' });
-        gsap.set(imgs, { clearProps: 'opacity' });
-        onDot.forEach(function (o) { o[0].removeEventListener('click', o[1]); });
+    /* ---------- the trunk section: no scroll tricks. Point at or focus a phase and its ring lights up and the photo changes. ---------- */
+    var R = $('.rings');
+    if (R) {
+      var items = $$('.rings-list li', R), rs = $$('.rs-ring', R), imgs = $$('.rs-img', R);
+      var show = function (i) {
+        items.forEach(function (li, k) { li.classList.toggle('on', k === i); });
+        rs.forEach(function (r, k) { r.classList.toggle('on', k === i); });
+        imgs.forEach(function (im, k) { gsap.to(im, { opacity: k === i ? 1 : 0, duration: .7, overwrite: 'auto' }); });
       };
-    });
+      items.forEach(function (li, i) {
+        li.addEventListener('mouseenter', function () { show(i); });
+        li.addEventListener('focusin', function () { show(i); });
+      });
+      show(0);
+      gsap.set(rs, { strokeDasharray: 1, strokeDashoffset: 1 });
+      gsap.to(rs, { strokeDashoffset: 0, duration: 1.8, stagger: .15, ease: 'power2.inOut', scrollTrigger: { trigger: R, start: 'top 70%', once: true } });
+      gsap.to($('.rings-stage svg', R), { scale: 1.012, duration: 7, yoyo: true, repeat: -1, ease: 'sine.inOut', transformOrigin: '50% 50%' });
+    }
 
     addEventListener('load', function () { ScrollTrigger.refresh(); });
   }

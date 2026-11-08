@@ -261,12 +261,11 @@ def rings_section():
         <p class="kicker">From first steps to matric</p>
         <h2 id="rings-h">Five phases, one ring of growth each</h2>
         <ol class="rings-list" aria-label="School phases from 18 months to Grade 12">%s</ol>
-        <div class="rings-nav" hidden><p class="rings-count" aria-hidden="true"><b>1</b> / 5</p><div class="rings-dots" role="group" aria-label="Choose a phase">%s</div></div>
       </div>
       %s
     </div>
   </div>
-</section>""" % (items, "".join('<button type="button" aria-label="Show %s"></button>' % esc(n) for _s, n, _g, _h in PHASES), rings_stage())
+</section>""" % (items, rings_stage())
 
 
 def hero_rings():

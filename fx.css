@@ -86,31 +86,17 @@ em{font-style:normal;color:var(--leaf)}
 .rl-go{display:inline-flex;align-items:center;gap:8px;font-weight:700;color:var(--forest);margin-top:6px}
 .rl-go svg{width:18px;height:18px;transition:transform .5s var(--grow)}
 .rings-list a:hover .rl-go svg{transform:translate(3px,-3px)}
-.rings-nav{margin-top:28px}
-.rings-count{margin:0 0 12px;font:700 .85rem var(--sans);letter-spacing:.14em;color:var(--muted)}
-.rings-count b{font:400 1.6rem var(--serif);color:var(--forest);letter-spacing:0}
-.rings-dots{display:flex;gap:10px}
-.rings-dots button{width:34px;height:34px;border-radius:50%;border:2px solid var(--leaf);background:transparent;cursor:pointer;padding:0;transition:background .4s,transform .5s var(--grow)}
-.rings-dots button:nth-child(1){scale:.62}.rings-dots button:nth-child(2){scale:.74}.rings-dots button:nth-child(3){scale:.86}.rings-dots button:nth-child(4){scale:.96}.rings-dots button:nth-child(5){scale:1.08}
-.rings-dots button:hover,.rings-dots button.on{background:var(--leaf)}
 .rings-stage{position:relative;width:min(100%,560px);aspect-ratio:1;justify-self:center}
 .rings-stage svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;fill:none}
 .rs-base{stroke:var(--line);stroke-width:1}
 .rs-ring{stroke:var(--leaf);stroke-width:2.5;stroke-linecap:round;transform:rotate(-90deg);transform-origin:300px 300px}
-.rs-ring:nth-child(5){stroke:var(--sun)}
 .rs-disc{position:absolute;left:50%;top:50%;width:37.3%;aspect-ratio:1;translate:-50% -50%;border-radius:50%;overflow:hidden;background:var(--forest)}
 .rs-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.rs-img:not(:first-child){display:none}
-/* live (JS, desktop): pinned, one phase at a time */
-.rings.live .rings-pin{height:100vh;padding:84px 0 0;box-sizing:border-box;display:flex;align-items:center}
-.rings.live .rings-grid{width:100%}
-.rings.live .rings-list{display:grid}
-.rings.live .rings-list li{grid-area:1/1;margin:0;opacity:0;transition:opacity .5s}
-.rings.live .rings-list li.on{opacity:1}
-.rings.live .rings-list a{border-left-color:var(--leaf)}
-.rings.live .rings-copy h2{margin-bottom:.7em}
-.rings.live .rs-img{display:block;opacity:0}
-.rings.live .rs-img:first-child{opacity:1}
+.rs-img{opacity:0}
+.rs-img:first-child{opacity:1}
+.rings-list li.on a{border-color:var(--leaf)}
+.rs-ring.on{stroke:var(--sun);stroke-width:4}
+.rings-list{display:grid;gap:4px}
 
 /* ---------- life: three discs ---------- */
 .life{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(20px,4vw,56px)}
