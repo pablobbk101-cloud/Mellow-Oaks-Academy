@@ -95,7 +95,7 @@
   addEventListener('scroll', function () { if (!tick) { tick = true; requestAnimationFrame(onScroll); } }, { passive: true });
   onScroll();
 
-  if (reduce) return;
+  return; /* scroll motion is handled by fx.js (GSAP) */
 
   /* lazy photos fade in as they load */
   document.querySelectorAll('img[loading="lazy"]').forEach(function (img) {

@@ -5,6 +5,7 @@ import hashlib, html, json, os, re
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ASSETS = ("styles.css", "fx.css", "site.js", "apply.js", "ask.js", "fx.js")
+VENDOR = ("vendor/gsap.min.js", "vendor/ScrollTrigger.min.js", "vendor/SplitText.min.js", "vendor/lenis.min.js")
 VER = {a: hashlib.sha1(open(os.path.join(ROOT, a), "rb").read()).hexdigest()[:8] for a in ASSETS}
 esc = lambda s: html.escape(str(s), quote=True)
 
@@ -145,9 +146,11 @@ def footer():
 
 
 FONTS = ('<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
-         '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,300..600&family=Figtree:wght@400;500;600;700&display=swap">')
+         '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Figtree:wght@400;500;600;700&display=swap">')
 HEAD_FX = ("(function(d){d.classList.add('js');if(!matchMedia('(prefers-reduced-motion: reduce)').matches){d.classList.add('fx');"
-           "setTimeout(function(){d.classList.add('fx-ready')},4500)}})(document.documentElement);")
+           "setTimeout(function(){d.classList.add('fx-ready')},4500)}"
+           "try{var o=JSON.parse(sessionStorage.getItem('mo_vt')||'null');if(o){d.style.setProperty('--vx',o[0]+'px');d.style.setProperty('--vy',o[1]+'px')}}catch(e){}"
+           "addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('a[href]');if(a&&a.origin===location.origin){try{sessionStorage.setItem('mo_vt',JSON.stringify([e.clientX,e.clientY]))}catch(x){}}},true)})(document.documentElement);")
 FAV = UP + "2025/09/MellowOaksAcademy_logosm-3.png"
 
 
@@ -175,10 +178,14 @@ def page(fn, title, desc, body, scripts=("site.js", "ask.js"), nav=None):
 </body>
 </html>
 """ % (esc(title), esc(desc), FAV, FONTS, VER["styles.css"], VER["fx.css"], HEAD_FX, header(nav or fn), body, footer(),
-       "\n".join('<script src="%s?v=%s" defer></script>' % (s, VER[s]) for s in tuple(scripts) + ("fx.js",)))
+       "\n".join(['<script src="%s" defer></script>' % v for v in VENDOR] + ['<script src="%s?v=%s" defer></script>' % (s, VER[s]) for s in tuple(scripts) + ("fx.js",)]))
     doc = re.sub(r'href="index\.html', 'href="./', doc)
     doc = re.sub(r'href="([a-z0-9-]+)\.html', r'href="\1', doc)
     open(os.path.join(ROOT, fn), "w", encoding="utf-8").write(doc)
+
+
+RINGS_SVG = '<svg class="ph-rings" viewBox="0 0 100 100" aria-hidden="true">%s</svg>' % "".join(
+    '<circle cx="50" cy="50" r="%s" vector-effect="non-scaling-stroke"/>' % r for r in (38, 42, 46.5, 51, 56, 62))
 
 
 def hero_inner(kicker, h1, lede, key, crumbs=None, cta=True):
@@ -189,11 +196,11 @@ def hero_inner(kicker, h1, lede, key, crumbs=None, cta=True):
 <section class="page-hero">
   <div class="wrap page-hero-grid">
     <div class="ph-copy">%s<p class="kicker">%s</p><h1>%s</h1><p class="lede">%s</p>%s</div>
-    <div class="ph-photo">%s</div>
+    <div class="ph-photo">%s<div class="ph-disc">%s</div></div>
   </div>
 </section>""" % (cr, esc(kicker), esc(h1), esc(lede),
                  '<div class="btn-row"><a class="btn btn-leaf" href="apply.html">Apply online</a><a class="btn btn-line" href="contact.html#tour">Book a tour</a></div>' if cta else "",
-                 img(key, lazy=False, eager_pri=True))
+                 RINGS_SVG, img(key, lazy=False, eager_pri=True))
 
 
 def prose(*paras):
@@ -209,7 +216,7 @@ def split(key, h2, body, flip=False):
 
 
 def cta_band(h2="2027 registrations are open", p="Limited spaces are available. Secure your child's place today."):
-    return '<section class="cta"><div class="wrap cta-inner"><div><h2>%s</h2><p>%s</p></div><div class="btn-row"><a class="btn btn-sun" href="apply.html">Apply online</a><a class="btn btn-ghost-light" href="contact.html#tour">Book a tour</a></div></div></section>' % (esc(h2).replace(" open", " <em>open</em>"), esc(p))
+    return '<section class="cta"><div class="wrap cta-inner"><div><h2>%s</h2><p>%s</p></div><div class="btn-row"><a class="btn btn-sun" href="apply.html">Apply online</a><a class="btn btn-ghost-light" href="contact.html#tour">Book a tour</a></div></div></section>' % (esc(h2), esc(p))
 
 
 def phase_path(current=None):
@@ -224,55 +231,82 @@ def phase_path(current=None):
 PHASE_IMG = {"pre-primary": "grass", "foundation": "outdoor", "intermediate": "computers", "senior": "lab", "fet": "science"}
 
 
-def phase_list():
-    rows = "".join(
-        '<li><a href="%s"><span class="pl-num">0%d</span><span class="pl-name">%s</span><span class="pl-grades">%s</span><span class="pl-arrow">%s</span></a></li>'
-        % (href, i + 1, esc(name), esc(grades), ICON["arrow"]) for i, (slug, name, grades, href) in enumerate(PHASES))
-    return '<ol class="plist" aria-label="School phases from 18 months to Grade 12">%s</ol>' % rows
+PHASE_IMG = {"pre-primary": "grass", "foundation": "outdoor", "intermediate": "computers", "senior": "lab", "fet": "science"}
+PHASE_TEXT = {
+    "pre-primary": "A warm, engaging space where young children explore, create and grow.",
+    "foundation": "Critical thinking, collaboration and a love for discovery, in classes capped at twenty.",
+    "intermediate": "The Stimulus Maksima Reading Programme cultivates a love for reading across every grade.",
+    "senior": "A challenging, well-rounded curriculum that prepares learners for university and life beyond.",
+    "fet": "Grade 11 launched in 2025, with Grade 12 to follow.",
+}
+RING_R = (112, 150, 190, 232, 276)
+
+
+def rings_stage():
+    base = "".join('<circle class="rs-base" cx="300" cy="300" r="%d"/>' % r for r in RING_R)
+    live = "".join('<circle class="rs-ring" cx="300" cy="300" r="%d" pathLength="1"/>' % r for r in RING_R)
+    imgs = "".join(img(PHASE_IMG[slug], "rs-img", lazy=(i > 0)) for i, (slug, *_r) in enumerate(PHASES))
+    return ('<div class="rings-stage" aria-hidden="true"><svg viewBox="0 0 600 600">%s<g class="rs-live">%s</g></svg>'
+            '<div class="rs-disc">%s</div></div>') % (base, live, imgs)
+
+
+def rings_section():
+    items = "".join(
+        '<li><a href="%s"><span class="rl-grades">%s</span><span class="rl-name">%s</span><span class="rl-text">%s</span><span class="rl-go">Explore this phase%s</span></a></li>'
+        % (href, esc(grades), esc(name), esc(PHASE_TEXT[slug]), ICON["arrow"]) for slug, name, grades, href in PHASES)
+    return """<section class="rings" id="rings" aria-labelledby="rings-h">
+  <div class="rings-pin">
+    <div class="wrap rings-grid">
+      <div class="rings-copy">
+        <p class="kicker">From first steps to matric</p>
+        <h2 id="rings-h">Five phases, one ring of growth each</h2>
+        <ol class="rings-list" aria-label="School phases from 18 months to Grade 12">%s</ol>
+        <div class="rings-nav" hidden><p class="rings-count" aria-hidden="true"><b>1</b> / 5</p><div class="rings-dots" role="group" aria-label="Choose a phase">%s</div></div>
+      </div>
+      %s
+    </div>
+  </div>
+</section>""" % (items, "".join('<button type="button" aria-label="Show %s"></button>' % esc(n) for _s, n, _g, _h in PHASES), rings_stage())
+
+
+def hero_rings():
+    return '<svg class="hr-rings" viewBox="0 0 100 100" aria-hidden="true">%s</svg>' % "".join(
+        '<circle cx="50" cy="50" r="%s" pathLength="1"/>' % r for r in (27, 31, 36, 42, 49, 57))
 
 
 def build_home():
     body = """
-%s
 <section class="hero hero-home">
-  <div class="hero-media">%s<div class="hero-shade"></div></div>
-  <div class="wrap hero-inner">
-    <p class="pill"><span class="dot" aria-hidden="true"></span>2027 registrations now open</p>
-    <h1>Where curiosity <em>blooms</em> and every learner thrives</h1>
-    <p class="lede">A CAPS school in Roodepoort, from 18 months to Grade 12, set among gardens and oak trees.</p>
-    <div class="btn-row"><a class="btn btn-sun" href="apply.html">Apply for 2027</a><a class="btn btn-ghost-light" href="contact.html#tour">Book a tour</a></div>
+  <div class="wrap hero-grid">
+    <div class="hero-copy">
+      <p class="pill"><span class="dot" aria-hidden="true"></span>2027 registrations now open</p>
+      <h1>Where curiosity blooms</h1>
+      <p class="lede">A CAPS school in Roodepoort, from 18 months to Grade 12, set among gardens and oak trees. Every learner is nurtured to thrive.</p>
+      <div class="btn-row"><a class="btn btn-sun" href="apply.html">Apply for 2027</a><a class="btn btn-ghost-light" href="contact.html#tour">Book a tour</a></div>
+    </div>
+    <div class="hero-disc">%s<div class="hd-photo">%s</div></div>
   </div>
+  <ul class="hero-facts wrap">
+    <li><b data-count="20">20</b><span>learners in a class, at most</span></li>
+    <li><b data-count="5">5</b><span>phases, 18 months to Grade 12</span></li>
+    <li><b>Fri</b><span>every Friday is Open Day</span></li>
+  </ul>
 </section>
-%s
 <section class="statement">
   <div class="wrap">
-    <p>Small classes of no more than twenty. A creative, <em>inquiry-based</em> take on CAPS. Christian values, taught among gardens and old oak trees.</p>
+    <p class="statement-text">Small classes of no more than twenty. A creative, inquiry-based take on CAPS. Christian values, taught among gardens and old oak trees.</p>
     <div class="btn-row"><a class="btn btn-leaf" href="about.html">Our school</a><a class="btn btn-line" href="principal.html">Meet the principal</a></div>
   </div>
 </section>
-<section class="section" style="padding-top:0">
+%s
+<section class="section life-sec">
   <div class="wrap">
-    <div class="stats">
-      <div class="stat"><b data-count="20">20</b><span>learners in a class, at most</span></div>
-      <div class="stat"><b data-count="5">5</b><span>phases, from 18 months to Grade 12</span></div>
-      <div class="stat"><b>Fri</b><span>every Friday is Open Day, come and look around</span></div>
-    </div>
-  </div>
-</section>
-<section class="dark-band">
-  <div class="wrap">
-    <div class="head"><p class="kicker">From first steps to matric</p><h2>One school for <em>every</em> stage</h2><p>Pick a phase to see what learners do there.</p></div>
-    %s
-  </div>
-</section>
-<section class="section">
-  <div class="wrap">
-    <div class="head"><p class="kicker">Beyond the classroom</p><h2>Life at <em>Mellow Oaks</em></h2></div>
-    <div class="ptiles">
-      <a class="ptile" href="academics.html">%s<span class="pt-cap"><b>Academics</b><small>CAPS with creative, inquiry-based learning</small></span></a>
-      <a class="ptile" href="sports-and-clubs.html">%s<span class="pt-cap"><b>Sports and clubs</b><small>Soccer, netball, athletics, dance, chess and drama</small></span></a>
-      <a class="ptile" href="school-life.html">%s<span class="pt-cap"><b>Campus life</b><small>Outdoor classrooms, gardens and leafy courtyards</small></span></a>
-    </div>
+    <div class="head"><h2>Life at Mellow Oaks</h2></div>
+    <ul class="life">
+      <li><a href="academics.html"><span class="life-img">%s</span><b>Academics</b><small>CAPS with creative, inquiry-based learning</small></a></li>
+      <li><a href="sports-and-clubs.html"><span class="life-img">%s</span><b>Sports and clubs</b><small>Soccer, netball, athletics, dance, chess and drama</small></a></li>
+      <li><a href="school-life.html"><span class="life-img">%s</span><b>Campus life</b><small>Outdoor classrooms, gardens and leafy courtyards</small></a></li>
+    </ul>
   </div>
 </section>
 <section class="section tint news-top">
@@ -283,11 +317,11 @@ def build_home():
 </section>
 <section class="section">
   <div class="wrap video-grid">
-    <div><p class="kicker">School tour</p><h2>Discover the spirit of <em>Mellow Oaks</em></h2><p>From joyful classrooms and vibrant sports fields to the lush natural surroundings that inspire every learner. Watch the school tour video.</p><a class="btn btn-line" href="contact.html#tour">Book a tour in person</a></div>
+    <div><p class="kicker">School tour</p><h2>Discover the spirit of Mellow Oaks</h2><p>From joyful classrooms and vibrant sports fields to the lush natural surroundings that inspire every learner. Watch the school tour video.</p><a class="btn btn-line" href="contact.html#tour">Book a tour in person</a></div>
     <div class="video"><button class="video-btn" type="button" data-video="%s" aria-label="Play the school tour video">%s<span class="play" aria-hidden="true"></span></button></div>
   </div>
 </section>
-%s""" % ("", img("grounds", lazy=False, eager_pri=True), quick_bar(), phase_list(),
+%s""" % (hero_rings(), img("grounds", lazy=False, eager_pri=True), rings_section(),
          img("class"), img("sport"), img("outdoor"), news_list(3), VIDEO, img("green"), cta_band())
     page("index.html", "A CAPS school in Roodepoort, 18 months to Grade 12",
          "Concept website for Mellow Oaks Academy in Roodepoort: pre-primary, primary and high school with small classes, CAPS curriculum and Christian values.", body)
@@ -582,6 +616,12 @@ def build_contact():
     page("contact.html", "Contact", "Contact Mellow Oaks Academy, book a tour or ask a question.", body)
 
 
+def build_404():
+    body = hero_inner("Error 404", "Page not found", "That page has moved, or the link was mistyped. The home page and the search are good places to pick the path up again.", "grounds", [("Home", "index.html")], cta=False)
+    body = body.replace('</div>\n    <div class="ph-photo">', '<div class="btn-row"><a class="btn btn-leaf" href="index.html">Back to home</a><a class="btn btn-line" href="contact.html">Contact the school</a></div></div>\n    <div class="ph-photo">', 1)
+    page("404.html", "Page not found", "This page could not be found.", body)
+
+
 def build_apply():
     grades = ["Pre-Primary (18 months to Grade RR)", "Grade R", "Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5", "Grade 6", "Grade 7",
               "Grade 8", "Grade 9", "Grade 10", "Grade 11", "Grade 12"]
@@ -682,7 +722,7 @@ def strip_tags(h):
 
 def build_index():
     pages, chunks = [], []
-    for fn in sorted(x for x in os.listdir(ROOT) if x.endswith(".html")):
+    for fn in sorted(x for x in os.listdir(ROOT) if x.endswith(".html") and x != "404.html"):
         doc = open(os.path.join(ROOT, fn), encoding="utf-8").read()
         url = "/" if fn == "index.html" else "/" + fn[:-5]
         title = "Home" if fn == "index.html" else re.search(r"<title>(.*?) \|", doc).group(1)
@@ -716,7 +756,7 @@ def build_index():
 
 if __name__ == "__main__":
     for f in (build_home, build_about, build_principal, build_careers, build_academics, build_phases, build_support,
-              build_school_life, build_sports, build_news, build_posts, build_admissions, build_fees, build_contact, build_apply):
+              build_school_life, build_sports, build_news, build_posts, build_admissions, build_fees, build_contact, build_apply, build_404):
         f()
     build_index()
     print("built", sorted(x for x in os.listdir(ROOT) if x.endswith(".html")))
