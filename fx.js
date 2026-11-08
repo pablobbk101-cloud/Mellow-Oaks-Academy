@@ -23,14 +23,16 @@
 
     /* smooth scroll, on the same clock */
     var lenis = null;
-    if (window.Lenis) {
+    /* smooth scroll only for a real mouse on a wide screen; phones, tablets and narrow windows keep native scrolling */
+    if (window.Lenis && matchMedia('(hover: hover) and (pointer: fine) and (min-width: 1001px)').matches) {
       lenis = new Lenis({ lerp: .11, smoothWheel: true });
       lenis.on('scroll', ScrollTrigger.update);
       gsap.ticker.add(function (t) { lenis.raf(t * 1000); });
       gsap.ticker.lagSmoothing(0);
+      /* panels that scroll on their own must keep native wheel behaviour */
+      $$('#nav, .ask-panel, .ask-body').forEach(function (el) { el.setAttribute('data-lenis-prevent', ''); });
       new MutationObserver(function () {
-        var stop = doc.classList.contains('ask-open') || (document.querySelector('.menu-btn[aria-expanded="true"]') && innerWidth <= 1000);
-        stop ? lenis.stop() : lenis.start();
+        doc.classList.contains('ask-open') ? lenis.stop() : lenis.start();
       }).observe(doc, { attributes: true, attributeFilter: ['class'] });
       $$('a[href^="#"]').forEach(function (a) {
         a.addEventListener('click', function (e) {
