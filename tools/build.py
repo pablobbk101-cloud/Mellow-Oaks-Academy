@@ -135,7 +135,6 @@ def footer():
       %s
       <div><h4>The school</h4><ul><li><a href="about.html">Our school</a></li><li><a href="principal.html">Our principal</a></li><li><a href="careers.html">Careers</a></li><li><a href="contact.html">Contact</a></li><li><a href="%sprivacypolicy/" rel="noopener">Privacy policy</a></li><li><a href="%spaia-manual/" rel="noopener">PAIA manual</a></li></ul></div>
     </div>
-    <div class="wordmark" aria-hidden="true">Mellow <em>Oaks</em></div>
     <div class="legal"><p>Concept website by %s. Not the official website of Mellow Oaks Academy.</p><p>Text, photos, logo and documents are from the school's current website.</p></div>
   </div>
 </footer>
@@ -149,11 +148,10 @@ FONTS = ('<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="
          '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,300..600&family=Figtree:wght@400;500;600;700&display=swap">')
 HEAD_FX = ("(function(d){d.classList.add('js');if(!matchMedia('(prefers-reduced-motion: reduce)').matches){d.classList.add('fx');"
            "setTimeout(function(){d.classList.add('fx-ready')},4500)}})(document.documentElement);")
-INTRO_FX = ("(function(d){try{if(d.classList.contains('fx')&&!sessionStorage.getItem('mo_intro'))d.classList.add('fx-intro')}catch(e){}})(document.documentElement);")
 FAV = UP + "2025/09/MellowOaksAcademy_logosm-3.png"
 
 
-def page(fn, title, desc, body, scripts=("site.js", "ask.js"), nav=None, intro=False):
+def page(fn, title, desc, body, scripts=("site.js", "ask.js"), nav=None):
     doc = """<!doctype html>
 <html lang="en-ZA">
 <head>
@@ -176,7 +174,7 @@ def page(fn, title, desc, body, scripts=("site.js", "ask.js"), nav=None, intro=F
 %s
 </body>
 </html>
-""" % (esc(title), esc(desc), FAV, FONTS, VER["styles.css"], VER["fx.css"], HEAD_FX + (INTRO_FX if intro else ""), header(nav or fn), body, footer(),
+""" % (esc(title), esc(desc), FAV, FONTS, VER["styles.css"], VER["fx.css"], HEAD_FX, header(nav or fn), body, footer(),
        "\n".join('<script src="%s?v=%s" defer></script>' % (s, VER[s]) for s in tuple(scripts) + ("fx.js",)))
     doc = re.sub(r'href="index\.html', 'href="./', doc)
     doc = re.sub(r'href="([a-z0-9-]+)\.html', r'href="\1', doc)
@@ -228,23 +226,12 @@ PHASE_IMG = {"pre-primary": "grass", "foundation": "outdoor", "intermediate": "c
 
 def phase_list():
     rows = "".join(
-        '<li><a href="%s" data-img="%s%s"><span class="pl-num">0%d</span><span class="pl-name">%s</span><span class="pl-grades">%s</span><span class="pl-arrow">%s</span></a></li>'
-        % (href, UP, IMG[PHASE_IMG[slug]][0], i + 1, esc(name), esc(grades), ICON["arrow"]) for i, (slug, name, grades, href) in enumerate(PHASES))
+        '<li><a href="%s"><span class="pl-num">0%d</span><span class="pl-name">%s</span><span class="pl-grades">%s</span><span class="pl-arrow">%s</span></a></li>'
+        % (href, i + 1, esc(name), esc(grades), ICON["arrow"]) for i, (slug, name, grades, href) in enumerate(PHASES))
     return '<ol class="plist" aria-label="School phases from 18 months to Grade 12">%s</ol>' % rows
 
 
-def marquee():
-    words = ["Curiosity", "Character", "Community", "Christian values", "Classes of 20", "Gardens and oaks"]
-    one = "".join("<span>%s</span><i></i>" % esc(w) for w in words)
-    return '<div class="marquee" aria-hidden="true"><div class="mq-track"><div class="mq-set">%s</div><div class="mq-set">%s</div></div></div>' % (one, one)
-
-
 def build_home():
-    curtain = ('<div class="curtain" aria-hidden="true">%s<div class="cur-word"><b>Mellow </b><i>Oaks</i></div>'
-               '<div class="cur-count">0</div><div class="cur-line"></div></div>') % img("logo", lazy=False)
-    badge = ('<a class="hero-badge" href="apply.html" aria-label="Apply for 2027"><svg class="ring-text" viewBox="0 0 200 200" aria-hidden="true">'
-             '<defs><path id="rt" d="M100,100 m-78,0 a78,78 0 1,1 156,0 a78,78 0 1,1 -156,0"/></defs>'
-             '<text><textPath href="#rt">Registrations open for 2027 • Apply now • </textPath></text></svg>%s</a>') % ICON["arrow"].replace('<svg ', '<svg class="arrow" ')
     body = """
 %s
 <section class="hero hero-home">
@@ -255,14 +242,11 @@ def build_home():
     <p class="lede">A CAPS school in Roodepoort, from 18 months to Grade 12, set among gardens and oak trees.</p>
     <div class="btn-row"><a class="btn btn-sun" href="apply.html">Apply for 2027</a><a class="btn btn-ghost-light" href="contact.html#tour">Book a tour</a></div>
   </div>
-  %s
-  <span class="scroll-cue" aria-hidden="true">Scroll</span>
 </section>
-%s
 %s
 <section class="statement">
   <div class="wrap">
-    <p data-scrub>Small classes of no more than twenty. A creative, <em>inquiry-based</em> take on CAPS. Christian values, taught among gardens and old oak trees.</p>
+    <p>Small classes of no more than twenty. A creative, <em>inquiry-based</em> take on CAPS. Christian values, taught among gardens and old oak trees.</p>
     <div class="btn-row"><a class="btn btn-leaf" href="about.html">Our school</a><a class="btn btn-line" href="principal.html">Meet the principal</a></div>
   </div>
 </section>
@@ -293,7 +277,7 @@ def build_home():
 </section>
 <section class="section tint news-top">
   <div class="wrap">
-    <div class="head row"><h2>Latest <em>news</em></h2><a class="text-link" href="news.html">All news</a></div>
+    <div class="head row"><h2>Latest news</h2><a class="text-link" href="news.html">All news</a></div>
     %s
   </div>
 </section>
@@ -303,10 +287,10 @@ def build_home():
     <div class="video"><button class="video-btn" type="button" data-video="%s" aria-label="Play the school tour video">%s<span class="play" aria-hidden="true"></span></button></div>
   </div>
 </section>
-%s""" % (curtain, img("grounds", lazy=False, eager_pri=True), badge, quick_bar(), marquee(), phase_list(),
+%s""" % ("", img("grounds", lazy=False, eager_pri=True), quick_bar(), phase_list(),
          img("class"), img("sport"), img("outdoor"), news_list(3), VIDEO, img("green"), cta_band())
     page("index.html", "A CAPS school in Roodepoort, 18 months to Grade 12",
-         "Concept website for Mellow Oaks Academy in Roodepoort: pre-primary, primary and high school with small classes, CAPS curriculum and Christian values.", body, intro=True)
+         "Concept website for Mellow Oaks Academy in Roodepoort: pre-primary, primary and high school with small classes, CAPS curriculum and Christian values.", body)
 
 
 # ------------------------------------------------------------------ news: the school's real blog posts (tools/posts.json, from its WordPress API)
